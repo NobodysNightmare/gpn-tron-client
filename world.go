@@ -4,9 +4,14 @@ import "fmt"
 
 const EmptyCell = -1
 
+const DirectionLeft = "left"
+const DirectionRight = "right"
+const DirectionUp = "up"
+const DirectionDown = "down"
+
 type World struct {
 	Width, Height int
-	Cells         [][]int // TODO: associate to players and remove upon player death
+	Cells         [][]int
 	Players       []Player
 	MyId          int
 }
@@ -32,6 +37,34 @@ func NewWorld(w, h, playerId int) World {
 
 func (w World) Me() Player {
 	return w.Players[w.MyId]
+}
+
+func (w World) NextCell(x, y int, direction string) (int, int) {
+	if direction == DirectionLeft {
+		return w.WrapX(x - 1), y
+	} else if direction == DirectionRight {
+		return w.WrapX(x + 1), y
+	} else if direction == DirectionUp {
+		return x, w.WrapY(y - 1)
+	}
+
+	return x, w.WrapY(y + 1)
+}
+
+func (w World) WrapX(x int) int {
+	if x < 0 {
+		x += w.Width
+	}
+
+	return x % w.Width
+}
+
+func (w World) WrapY(y int) int {
+	if y < 0 {
+		y += w.Height
+	}
+
+	return y % w.Height
 }
 
 func (w *World) RegisterPlayer(playerId int, name string) {

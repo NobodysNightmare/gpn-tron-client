@@ -25,7 +25,7 @@ func main() {
 	fmt.Fprint(conn, joinMessage.ToProtocolString())
 
 	var decider Decider
-	decider = LeftDecider{}
+	decider = LongPathDecider{}
 
 	world := NewWorld(0, 0, 0)
 
