@@ -17,7 +17,7 @@ type Message struct {
 func main() {
 	var wg sync.WaitGroup
 
-	PlayAsync(&wg, "NN-left", "superdupersecure", LeftDecider{})
+	PlayAsync(&wg, "NN-collision", "superdupersecure", CollisionAvoidDecider{})
 	PlayAsync(&wg, "NN-path", "superdupersecure", LongPathDecider{})
 	PlayAsync(&wg, "NN-score", "superdupersecure", HighScoreDecider{})
 

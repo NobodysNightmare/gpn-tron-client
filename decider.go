@@ -4,10 +4,17 @@ type Decider interface {
 	DecideMove(World) string
 }
 
-type LeftDecider struct{}
+type CollisionAvoidDecider struct{}
 
-func (LeftDecider) DecideMove(w World) string {
-	return "left"
+func (CollisionAvoidDecider) DecideMove(w World) string {
+	for _, currentDir := range []string{DirectionLeft, DirectionRight, DirectionUp, DirectionDown} {
+		x, y := w.NextCell(w.Me().X, w.Me().Y, currentDir)
+		if w.Cells[x][y] == EmptyCell {
+			return currentDir
+		}
+	}
+
+	return DirectionLeft
 }
 
 type LongPathDecider struct{}
