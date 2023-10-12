@@ -7,7 +7,7 @@ type Decider interface {
 type CollisionAvoidDecider struct{}
 
 func (CollisionAvoidDecider) DecideMove(w World) Direction {
-	for _, currentDir := range []Direction{DirectionLeft, DirectionRight, DirectionUp, DirectionDown} {
+	for _, currentDir := range []Direction{DirectionLeft, DirectionUp, DirectionRight, DirectionDown} {
 		pos := w.NextCell(w.Me().Pos, currentDir)
 		if w.Cells[pos.X][pos.Y] == EmptyCell {
 			return currentDir
@@ -22,7 +22,7 @@ type LongPathDecider struct{}
 func (LongPathDecider) DecideMove(w World) Direction {
 	choice := DirectionLeft
 	maxLength := PathLength(w, w.Me().Pos, "left")
-	for _, currentDir := range []Direction{DirectionRight, DirectionUp, DirectionDown} {
+	for _, currentDir := range []Direction{DirectionUp, DirectionRight, DirectionDown} {
 		currentLength := PathLength(w, w.Me().Pos, currentDir)
 		if currentLength > maxLength {
 			choice = currentDir
@@ -39,7 +39,7 @@ const playerHeadPenalty = 5
 func (HighScoreDecider) DecideMove(w World) Direction {
 	choice := DirectionLeft
 	maxScore := PathScore(w, w.Me(), "left")
-	for _, currentDir := range []Direction{DirectionRight, DirectionUp, DirectionDown} {
+	for _, currentDir := range []Direction{DirectionUp, DirectionRight, DirectionDown} {
 		currentScore := PathScore(w, w.Me(), currentDir)
 		if currentScore > maxScore {
 			choice = currentDir
