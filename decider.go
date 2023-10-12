@@ -1,13 +1,13 @@
 package main
 
 type Decider interface {
-	DecideMove(World) string
+	DecideMove(World) Direction
 }
 
 type CollisionAvoidDecider struct{}
 
-func (CollisionAvoidDecider) DecideMove(w World) string {
-	for _, currentDir := range []string{DirectionLeft, DirectionRight, DirectionUp, DirectionDown} {
+func (CollisionAvoidDecider) DecideMove(w World) Direction {
+	for _, currentDir := range []Direction{DirectionLeft, DirectionRight, DirectionUp, DirectionDown} {
 		pos := w.NextCell(w.Me().Pos, currentDir)
 		if w.Cells[pos.X][pos.Y] == EmptyCell {
 			return currentDir
@@ -19,10 +19,10 @@ func (CollisionAvoidDecider) DecideMove(w World) string {
 
 type LongPathDecider struct{}
 
-func (LongPathDecider) DecideMove(w World) string {
+func (LongPathDecider) DecideMove(w World) Direction {
 	choice := DirectionLeft
 	maxLength := PathLength(w, w.Me().Pos, "left")
-	for _, currentDir := range []string{DirectionRight, DirectionUp, DirectionDown} {
+	for _, currentDir := range []Direction{DirectionRight, DirectionUp, DirectionDown} {
 		currentLength := PathLength(w, w.Me().Pos, currentDir)
 		if currentLength > maxLength {
 			choice = currentDir
@@ -34,11 +34,13 @@ func (LongPathDecider) DecideMove(w World) string {
 
 type HighScoreDecider struct{}
 
-func (HighScoreDecider) DecideMove(w World) string {
+const playerHeadPenalty = 5
+
+func (HighScoreDecider) DecideMove(w World) Direction {
 	choice := DirectionLeft
-	maxScore := PathScore(w, w.Me().Pos, "left")
-	for _, currentDir := range []string{DirectionRight, DirectionUp, DirectionDown} {
-		currentScore := PathScore(w, w.Me().Pos, currentDir)
+	maxScore := PathScore(w, w.Me(), "left")
+	for _, currentDir := range []Direction{DirectionRight, DirectionUp, DirectionDown} {
+		currentScore := PathScore(w, w.Me(), currentDir)
 		if currentScore > maxScore {
 			choice = currentDir
 		}
@@ -47,7 +49,7 @@ func (HighScoreDecider) DecideMove(w World) string {
 	return choice
 }
 
-func PathLength(w World, pos Position, direction string) int {
+func PathLength(w World, pos Position, direction Direction) int {
 	length := 0
 	pos = w.NextCell(pos, direction)
 	for w.Cells[pos.X][pos.Y] == EmptyCell {
@@ -58,14 +60,25 @@ func PathLength(w World, pos Position, direction string) int {
 	return length
 }
 
-func PathScore(w World, pos Position, direction string) int {
+func PathScore(w World, p Player, direction Direction) int {
 	score := 0
-	pos = w.NextCell(pos, direction)
+	pos := w.NextCell(p.Pos, direction)
+
 	for w.Cells[pos.X][pos.Y] == EmptyCell {
 		score += 1
-		// TODO: score heads of others negatively
 		// TODO: score free space positively
 		pos = w.NextCell(pos, direction)
+	}
+
+	// deduct points for player heads next to the target (unpredictable collision risk)
+	for _, neighbourPos := range w.Neighbours(pos) {
+		for _, player := range w.Players {
+			if player.Pos == neighbourPos && player.Id != w.MyId {
+				// ensure that steering next to player head is always better than immediate collision
+				penalty := max(min(score-1, playerHeadPenalty), 0)
+				score -= penalty
+			}
+		}
 	}
 
 	return score

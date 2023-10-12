@@ -4,10 +4,12 @@ import "fmt"
 
 const EmptyCell = -1
 
-const DirectionLeft = "left"
-const DirectionRight = "right"
-const DirectionUp = "up"
-const DirectionDown = "down"
+type Direction string
+
+const DirectionLeft = Direction("left")
+const DirectionRight = Direction("right")
+const DirectionUp = Direction("up")
+const DirectionDown = Direction("down")
 
 type World struct {
 	Width, Height int
@@ -17,6 +19,7 @@ type World struct {
 }
 
 type Player struct {
+	Id   int
 	Name string
 	Pos  Position
 }
@@ -43,7 +46,7 @@ func (w World) Me() Player {
 	return w.Players[w.MyId]
 }
 
-func (w World) NextCell(pos Position, direction string) Position {
+func (w World) NextCell(pos Position, direction Direction) Position {
 	if direction == DirectionLeft {
 		return Position{w.WrapX(pos.X - 1), pos.Y}
 	} else if direction == DirectionRight {
@@ -53,6 +56,15 @@ func (w World) NextCell(pos Position, direction string) Position {
 	}
 
 	return Position{pos.X, w.WrapY(pos.Y + 1)}
+}
+
+func (w World) Neighbours(pos Position) []Position {
+	return []Position{
+		w.NextCell(pos, DirectionLeft),
+		w.NextCell(pos, DirectionUp),
+		w.NextCell(pos, DirectionRight),
+		w.NextCell(pos, DirectionDown),
+	}
 }
 
 func (w World) WrapX(x int) int {
@@ -76,6 +88,7 @@ func (w *World) RegisterPlayer(playerId int, name string) {
 		w.Players = append(w.Players, Player{})
 	}
 
+	w.Players[playerId].Id = playerId
 	w.Players[playerId].Name = name
 }
 

@@ -17,22 +17,22 @@ type Message struct {
 func main() {
 	var wg sync.WaitGroup
 
-	PlayAsync(&wg, "NN-collision", "superdupersecure", CollisionAvoidDecider{})
-	PlayAsync(&wg, "NN-path", "superdupersecure", LongPathDecider{})
-	PlayAsync(&wg, "NN-score", "superdupersecure", HighScoreDecider{})
+	PlayAsync(&wg, "NN-collision", "superdupersecure", CollisionAvoidDecider{}, false)
+	PlayAsync(&wg, "NN-path", "superdupersecure", LongPathDecider{}, false)
+	PlayAsync(&wg, "NN-score", "superdupersecure", HighScoreDecider{}, true)
 
 	wg.Wait()
 }
 
-func PlayAsync(wg *sync.WaitGroup, name, secret string, decider Decider) {
+func PlayAsync(wg *sync.WaitGroup, name, secret string, decider Decider, draw bool) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		Play(name, secret, decider)
+		Play(name, secret, decider, draw)
 	}()
 }
 
-func Play(name, secret string, decider Decider) {
+func Play(name, secret string, decider Decider, draw bool) {
 	conn, err := net.Dial("tcp", "localhost:4000")
 	if err != nil {
 		fmt.Println(err)
@@ -86,9 +86,17 @@ func Play(name, secret string, decider Decider) {
 			fmt.Println("💀 We lost! 💀")
 			fmt.Println()
 		case "tick":
-			// world.PrettyPrint()
+			if draw {
+				world.PrettyPrint()
+			}
+
 			move := decider.DecideMove(world)
-			moveMessage := Message{Command: "move", Arguments: []string{move}}
+
+			if draw {
+				fmt.Println("Will move", move)
+			}
+
+			moveMessage := Message{Command: "move", Arguments: []string{string(move)}}
 			fmt.Fprint(conn, moveMessage.ToProtocolString())
 		case "error":
 			fmt.Println("An error occured: ", message.Arguments[0])
