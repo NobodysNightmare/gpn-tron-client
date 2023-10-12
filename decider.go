@@ -25,6 +25,21 @@ func (LongPathDecider) DecideMove(w World) string {
 	return choice
 }
 
+type HighScoreDecider struct{}
+
+func (HighScoreDecider) DecideMove(w World) string {
+	choice := DirectionLeft
+	maxScore := PathScore(w, w.Me().X, w.Me().Y, "left")
+	for _, currentDir := range []string{DirectionRight, DirectionUp, DirectionDown} {
+		currentScore := PathScore(w, w.Me().X, w.Me().Y, currentDir)
+		if currentScore > maxScore {
+			choice = currentDir
+		}
+	}
+
+	return choice
+}
+
 func PathLength(w World, x, y int, direction string) int {
 	length := 0
 	x, y = w.NextCell(x, y, direction)
@@ -34,4 +49,17 @@ func PathLength(w World, x, y int, direction string) int {
 	}
 
 	return length
+}
+
+func PathScore(w World, x, y int, direction string) int {
+	score := 0
+	x, y = w.NextCell(x, y, direction)
+	for w.Cells[x][y] == EmptyCell {
+		score += 1
+		// TODO: score heads of others negatively
+		// TODO: score free space positively
+		x, y = w.NextCell(x, y, direction)
+	}
+
+	return score
 }

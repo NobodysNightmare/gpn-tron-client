@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Message struct {
@@ -14,18 +15,33 @@ type Message struct {
 }
 
 func main() {
+	var wg sync.WaitGroup
+
+	PlayAsync(&wg, "NN-left", "superdupersecure", LeftDecider{})
+	PlayAsync(&wg, "NN-path", "superdupersecure", LongPathDecider{})
+	PlayAsync(&wg, "NN-score", "superdupersecure", HighScoreDecider{})
+
+	wg.Wait()
+}
+
+func PlayAsync(wg *sync.WaitGroup, name, secret string, decider Decider) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		Play(name, secret, decider)
+	}()
+}
+
+func Play(name, secret string, decider Decider) {
 	conn, err := net.Dial("tcp", "localhost:4000")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	joinMessage := Message{Command: "join", Arguments: []string{"NN", "superdupersecret"}}
+	joinMessage := Message{Command: "join", Arguments: []string{name, secret}}
 
 	fmt.Fprint(conn, joinMessage.ToProtocolString())
-
-	var decider Decider
-	decider = LongPathDecider{}
 
 	world := NewWorld(0, 0, 0)
 
@@ -70,7 +86,7 @@ func main() {
 			fmt.Println("💀 We lost! 💀")
 			fmt.Println()
 		case "tick":
-			world.PrettyPrint()
+			// world.PrettyPrint()
 			move := decider.DecideMove(world)
 			moveMessage := Message{Command: "move", Arguments: []string{move}}
 			fmt.Fprint(conn, moveMessage.ToProtocolString())
