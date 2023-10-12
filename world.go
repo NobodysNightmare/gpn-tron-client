@@ -18,6 +18,10 @@ type World struct {
 
 type Player struct {
 	Name string
+	Pos  Position
+}
+
+type Position struct {
 	X, Y int
 }
 
@@ -39,16 +43,16 @@ func (w World) Me() Player {
 	return w.Players[w.MyId]
 }
 
-func (w World) NextCell(x, y int, direction string) (int, int) {
+func (w World) NextCell(pos Position, direction string) Position {
 	if direction == DirectionLeft {
-		return w.WrapX(x - 1), y
+		return Position{w.WrapX(pos.X - 1), pos.Y}
 	} else if direction == DirectionRight {
-		return w.WrapX(x + 1), y
+		return Position{w.WrapX(pos.X + 1), pos.Y}
 	} else if direction == DirectionUp {
-		return x, w.WrapY(y - 1)
+		return Position{pos.X, w.WrapY(pos.Y - 1)}
 	}
 
-	return x, w.WrapY(y + 1)
+	return Position{pos.X, w.WrapY(pos.Y + 1)}
 }
 
 func (w World) WrapX(x int) int {
@@ -75,10 +79,9 @@ func (w *World) RegisterPlayer(playerId int, name string) {
 	w.Players[playerId].Name = name
 }
 
-func (w *World) UpdatePosition(playerId, x, y int) {
-	w.Cells[x][y] = playerId
-	w.Players[playerId].X = x
-	w.Players[playerId].Y = y
+func (w *World) UpdatePosition(playerId int, pos Position) {
+	w.Cells[pos.X][pos.Y] = playerId
+	w.Players[playerId].Pos = pos
 }
 
 func (w *World) KillPlayer(playerId int) {
@@ -97,14 +100,13 @@ func (w World) PrettyPrint() {
 	}
 	fmt.Println()
 
-	myX := w.Me().X
-	myY := w.Me().Y
+	pos := w.Me().Pos
 
 	for y := 0; y < w.Height; y++ {
 		for x := 0; x < w.Width; x++ {
 			if w.Cells[x][y] == EmptyCell {
 				fmt.Print(" ")
-			} else if myX == x && myY == y {
+			} else if pos.X == x && pos.Y == y {
 				fmt.Print("👑")
 			} else {
 				fmt.Print("X")

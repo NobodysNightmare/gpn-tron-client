@@ -71,7 +71,7 @@ func Play(name, secret string, decider Decider) {
 			pid := OptimisticParseInt(message.Arguments[0])
 			x := OptimisticParseInt(message.Arguments[1])
 			y := OptimisticParseInt(message.Arguments[2])
-			world.UpdatePosition(pid, x, y)
+			world.UpdatePosition(pid, Position{x, y})
 		case "die":
 			for _, pidString := range message.Arguments {
 				pid := OptimisticParseInt(pidString)
