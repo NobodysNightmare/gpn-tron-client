@@ -1,6 +1,10 @@
 package main
 
+// The Decider interface needs to be implemented to define a bot that can act autonomously
+// in the game.
 type Decider interface {
+	// The DecideMove method is called on every tick and returns the direction of the next move
+	// that the bot wants to make
 	DecideMove(World) Direction
 }
 

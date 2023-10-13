@@ -9,6 +9,8 @@ import (
 	"sync"
 )
 
+// Message encapsulates a message defined by the protocol
+// at https://github.com/freehuntx/gpn-tron/blob/master/PROTOCOL.md
 type Message struct {
 	Command   string
 	Arguments []string
@@ -32,6 +34,7 @@ func PlayAsync(wg *sync.WaitGroup, name, secret string, decider Decider, draw bo
 	}()
 }
 
+// Play connects to a server and uses the given decider to make its moves.
 func Play(name, secret string, decider Decider, draw bool) {
 	conn, err := net.Dial("tcp", "localhost:4000")
 	if err != nil {
@@ -107,6 +110,8 @@ func Play(name, secret string, decider Decider, draw bool) {
 	}
 }
 
+// ReadMessage parses a single line returned by the server and returns
+// the parsed Message.
 func ReadMessage(s string) Message {
 	s = strings.TrimSuffix(s, "\n")
 	parts := strings.Split(s, "|")
@@ -116,12 +121,17 @@ func ReadMessage(s string) Message {
 	}
 }
 
+// ToProtocolString formats the Message in a way that it can be sent
+// to the server.
 func (m Message) ToProtocolString() string {
 	parts := []string{m.Command}
 	parts = append(parts, m.Arguments...)
 	return fmt.Sprintln(strings.Join(parts, "|"))
 }
 
+// Parses the string, assuming that it can be parsed as an integer.
+// Returns -1 if a parsing error occured or the parsed string was the
+// number -1.
 func OptimisticParseInt(s string) int {
 	i, err := strconv.Atoi(s)
 	if err != nil {
